@@ -8,30 +8,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #define _OPEN_SYS_ITOA_TEXT
 #define false 0
 #define true 1
 #define BUFFSIZE 80
 
-unsigned long int doStuff(unsigned long int in, float chance, float time, int thisn){
+unsigned long int doStuff(unsigned long int in, float chance, float timer, int thisn){
+    srand(time(NULL));
+    //printf("A fazer coisas\n");
     float num = rand() / (float) RAND_MAX;
+    //printf("NUMERO RANDOM %f\n", num);
     if(num < chance){
-        printf("[p%d] lock on token (val = %lu)", thisn, in);
-        sleep(time);
-        printf("[p%d] Released lock on token", thisn);
+        printf("[p%d] lock on token (val = %lu)\n", thisn, in);
+        sleep(timer);
+        printf("[p%d] Released lock on token\n", thisn);
     }
     return(in+1);
 }
 
-int makeChild(int i, int limit, float time, float chance){
+int makeChild(int i, int limit, float timer, float chance){
     char temp[80], n1[30], n2[30];
     char pipe1[80], pipe2[80];
     FILE* rf;
     FILE* wt;
     int thisn = i;
 
-    unsigned long int out = 0, k = 0;
+    unsigned long int out = 1, k = 0;
     sprintf(n1,"%d",i);
     sprintf(n2,"%d",i+1);
     strcpy(temp, "pipe");
@@ -61,7 +65,7 @@ int makeChild(int i, int limit, float time, float chance){
             //Nada
         }
         else{
-            makeChild(i+1, limit, time, chance);
+            makeChild(i+1, limit, timer, chance);
         }
 
     }
@@ -73,20 +77,21 @@ int makeChild(int i, int limit, float time, float chance){
     strcpy(pipe2, temp);
 
     while(true){
-        /*
-        rf = fopen(pipe1, "r+");
-        wt = fopen(pipe2, "w+");
+         
+        rf = fopen(pipe1,"r");
         char num[80];
-        fread(num,100,1,rf);
+        fread(num,sizeof(num),1,rf);
         k = (unsigned long int) atof(num);
-        if(k!=out){
-            out = doStuff(out,chance,time,1);
+        //printf("%lu meme %lu \n",k, out);
+        if((k+1)!=out){
+            out = doStuff(k, chance, timer, 1);
+            out = k+1;
+            //printf("%lu cur Out\n",out);
+            wt = fopen(pipe2,"w");
+            fprintf(wt,"%lu",out);
+            fclose(wt);
+            
         }
-        sprintf(num,"%lu",out);
-        fwrite(num,strlen(num)+1,1,wt);
-        fclose(rf);
-        fclose(wt);
-        */
     }
 
     return 0;
@@ -101,7 +106,7 @@ int main(int argc, char* args[]){
     }
     
     int n = (int)atof(args[1]);
-    float time = atof(args[2]);
+    float timer = atof(args[2]);
     float chance = atof(args[3]);
     char thispipe[80];
     for(int i = 0; i < n-1; i++){
@@ -125,7 +130,7 @@ int main(int argc, char* args[]){
     fprintf(wt,"%lu",(unsigned long int) 0);
     fclose(wt);
     
-    unsigned long int out = 0;
+    unsigned long int out = 300;
     
 
 
@@ -138,7 +143,7 @@ int main(int argc, char* args[]){
         //out = doStuff(out,chance,time, n);
     }
     else{
-        makeChild(1, n, time, chance);
+        makeChild(1, n, timer, chance);
     }
     
     
@@ -151,15 +156,17 @@ int main(int argc, char* args[]){
         char num[80];
         fread(num,sizeof(num),1,rf);
         k = (unsigned long int) atof(num);
-        if(k!=out){
-            out = doStuff(k, chance, time, 1);
+        //printf("%lu meme %lu \n",k, out);
+        if((k+1)!=out){
+            out = doStuff(k, chance, timer, 1);
+            //printf("%lu cur Out\n",out);
             wt = fopen("pipe1to2.fifo","w");
             fprintf(wt,"%lu",out);
             fclose(wt);
             out = k;
         }
         //fwrite(num,strlen(num)+1,1,wt);
-        
+        sleep(2);
         
     }
 
