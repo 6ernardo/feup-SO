@@ -38,6 +38,7 @@ int makeChild(int i, int limit, float time, float chance){
     strcat(temp, n1);
     strcat(temp, "to");
     strcat(temp, n2);
+    strcat(temp, ".fifo");
 
     strcpy(pipe1, temp);
 
@@ -48,7 +49,7 @@ int makeChild(int i, int limit, float time, float chance){
         strcat(temp, n1);
         strcat(temp, "to");
         strcat(temp, n2);
-        
+        strcat(temp, ".fifo");
     
     
         pid_t pide = fork();
@@ -65,13 +66,14 @@ int makeChild(int i, int limit, float time, float chance){
 
     }
     else{
-        strcpy(temp,"pipento1");
+        strcpy(temp,"pipento1.fifo");
         k = 300;
     }
     
     strcpy(pipe2, temp);
 
     while(true){
+        /*
         rf = fopen(pipe1, "r+");
         wt = fopen(pipe2, "w+");
         char num[80];
@@ -84,6 +86,7 @@ int makeChild(int i, int limit, float time, float chance){
         fwrite(num,strlen(num)+1,1,wt);
         fclose(rf);
         fclose(wt);
+        */
     }
 
     return 0;
@@ -109,10 +112,19 @@ int main(int argc, char* args[]){
         strcat(pipename, n1);
         strcat(pipename, "to");
         strcat(pipename, n2);
+        strcat(pipename, ".fifo");
         mkfifo(pipename,0666);
-        strcpy(thispipe,pipename); //NO FIM VAI FICAR IGUAL A PIPE N-1 TO N
+
+        wt = fopen(pipename,"w");
+        fprintf(wt,"%lu",(unsigned long int) 0);
+        fclose(wt);
     }
-    mkfifo("pipento1",0666);
+    char pipento1[] = "pipento1.fifo";
+    mkfifo(pipento1,0666);
+    wt = fopen(pipento1,"w");
+    fprintf(wt,"%lu",(unsigned long int) 0);
+    fclose(wt);
+    
     unsigned long int out = 0;
     
 
@@ -129,23 +141,26 @@ int main(int argc, char* args[]){
         makeChild(1, n, time, chance);
     }
     
-
+    
     
 
     unsigned long int k = 0;
     while(true){
-        rf = fopen("pipento1","r+");
-        wt = fopen("pipe1to2","w+");
+        
+        rf = fopen("pipento1.fifo","r");
         char num[80];
-        fread(num,100,1,rf);
+        fread(num,sizeof(num),1,rf);
         k = (unsigned long int) atof(num);
         if(k!=out){
-            out = doStuff(out,chance,time,1);
+            out = doStuff(k, chance, time, 1);
+            wt = fopen("pipe1to2.fifo","w");
+            fprintf(wt,"%lu",out);
+            fclose(wt);
+            out = k;
         }
-        sprintf(num,"%lu",out);
-        fwrite(num,strlen(num)+1,1,wt);
-        fclose(rf);
-        fclose(wt);
+        //fwrite(num,strlen(num)+1,1,wt);
+        
+        
     }
 
     return 0;
