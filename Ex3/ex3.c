@@ -15,14 +15,6 @@
 #define true 1
 #define BUFFSIZE 80
 
-void properSize(char* in){
-    while(strlen(in)<8){
-        char coisa[] = "0";
-        strcat(coisa,in);
-        strcpy(in,coisa);
-    }
-}
-
 unsigned long int strToUnsignedLong(char* in){
     unsigned long int out = 0;
     for(int i = 0; in[i]!='\0'; i++){
