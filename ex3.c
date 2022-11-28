@@ -15,6 +15,14 @@
 #define true 1
 #define BUFFSIZE 80
 
+void properSize(char* in){
+    while(strlen(in)<8){
+        char coisa[] = "0";
+        strcat(coisa,in);
+        strcpy(in,coisa);
+    }
+}
+
 unsigned long int strToUnsignedLong(char* in){
     unsigned long int out = 0;
     for(int i = 0; in[i]!='\0'; i++){
@@ -47,8 +55,8 @@ int main(int argc, char* args[]){
     }
     
     int n = (int)atof(args[1]);
-    float timer = atof(args[2]);
-    float chance = atof(args[3]);
+    float chance = atof(args[2]);
+    float timer = atof(args[3]);
     char pipe1[80] = "pipento1",pipe2[80] = "pipe1to2";
     for(int i = 0; i < n-1; i++){
         char pipename[80], n1[30], n2[30];
@@ -84,6 +92,7 @@ int main(int argc, char* args[]){
             if(thisN==n){
                 strcpy(pipe2, "pipento1");
                 wt = open(pipe2,O_WRONLY);
+                sprintf(buf,"%lu",(unsigned long int)1);
                 if(write(wt, buf, 8)==-1){
                     return -1;
                 }
@@ -100,27 +109,24 @@ int main(int argc, char* args[]){
         }
         else{
             //PARENT
+            //NAO SE FAZ NADA
         }
     }
 
-    
-    printf("Processo %d pipe1 %s \t pipe2 %s\n",thisN,pipe1,pipe2);
 
     
 
     while(true){
-        //printf("Processo %d entrou no loop épico\n",thisN);
         rf = open(pipe1,O_RDONLY);
         out = read(rf,buf,8);
         out = strToUnsignedLong(buf);
-        //printf("Processo %d acabou de ler %lu\n",thisN,out);
         out = doStuff(out,chance,timer,thisN);
-        //printf("Processo %d acabou de fazer coisas %lu\n",thisN,out);
         wt = open(pipe2,O_WRONLY);
-        if(write(wt, &out, 8)==-1){
+        sprintf(buf,"%lu",out);
+        if(write(wt, buf, 8)==-1){
+            printf("Write error\n");
             return -1;
         }
-        //printf("Processo %d acabou de escrever\n",thisN);
     }
 
     return 0;
