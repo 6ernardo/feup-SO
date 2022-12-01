@@ -49,15 +49,16 @@ int main(int argc, char* args[]){
     int n = (int)atof(args[1]);
     float chance = atof(args[2]);
     float timer = atof(args[3]);
+
+    if(n<=1 || timer<0){
+        printf("Invalid input\n");
+        return -1;
+    }
+
     char pipe1[80] = "pipento1",pipe2[80] = "pipe1to2";
     for(int i = 0; i < n-1; i++){
-        char pipename[80], n1[30], n2[30];
-        sprintf(n1,"%d",i+1);
-        sprintf(n2,"%d",i+2);
-        strcpy(pipename, "pipe");
-        strcat(pipename, n1);
-        strcat(pipename, "to");
-        strcat(pipename, n2);
+        char pipename[80];
+        sprintf(pipename,"pipe%dto%d",i+1,i+2);
         mkfifo(pipename,0777);
     }
     mkfifo("pipento1",0777);
@@ -75,12 +76,7 @@ int main(int argc, char* args[]){
             char n1[30], n2[30];
             //CHILD
             thisN = i+1;
-            sprintf(n1,"%d",thisN-1);
-            sprintf(n2,"%d",thisN);
-            strcpy(pipe1, "pipe");
-            strcat(pipe1, n1);
-            strcat(pipe1, "to");
-            strcat(pipe1, n2);
+            sprintf(pipe1,"pipe%dto%d",thisN-1,thisN);
             if(thisN==n){
                 strcpy(pipe2, "pipento1");
                 wt = open(pipe2,O_WRONLY);
@@ -90,12 +86,7 @@ int main(int argc, char* args[]){
                 }
             }
             else{
-                sprintf(n1,"%d",thisN);
-                sprintf(n2,"%d",thisN+1);
-                strcpy(pipe2, "pipe");
-                strcat(pipe2, n1);
-                strcat(pipe2, "to");
-                strcat(pipe2, n2);
+                sprintf(pipe2,"pipe%dto%d",thisN,thisN+1);
             }
             i = n;
         }
